@@ -17,15 +17,15 @@ class NetbanClient:
         self._s = ClientSession(
             timeout=ClientTimeout(timeout),
         )
-        self._s.headers.update(
-            {"x-access-tokens": auth_token}
-        )
+        self._s.headers.update({"Netban-Api-Key": auth_token})
 
     @property
     def host_url(self) -> str:
         return self._host_url
 
-    async def get_restrictions_for_user(self, user:str, group: str|None = None) -> list[dict[str, Any]]:
+    async def get_restrictions_for_user(
+        self, user: str, group: str | None = None
+    ) -> list[dict[str, Any]]:
         url = join(self.host_url, "api/v1/restrictions")
         params = {
             "user": user,
@@ -35,8 +35,8 @@ class NetbanClient:
             params["group"] = group
 
         async with self._s.get(
-            url = url,
-            params = params,
+            url=url,
+            params=params,
         ) as response:
             response.raise_for_status()
             data = await response.json()
@@ -44,11 +44,11 @@ class NetbanClient:
 
     async def restrict_user(
         self,
-        user:str,
-        group: str|None = None,
+        user: str,
+        group: str | None = None,
         restriction_type: UserRestrictionType = UserRestrictionType.BAN,
         restriction_reason: str = "",
-        restriction_length: str|None = None,
+        restriction_length: str | None = None,
     ) -> dict[str, Any]:
         url = join(self.host_url, "api/v1/restrictions/restrict/")
         json_body = {
@@ -64,11 +64,9 @@ class NetbanClient:
         print(json_body)
 
         async with self._s.post(
-            url = url,
+            url=url,
             json=json_body,
         ) as response:
             response.raise_for_status()
             data = await response.json()
             return data
-
-
