@@ -7,6 +7,7 @@ from urllib.parse import urljoin as join
 from aiohttp import ClientSession, ClientTimeout
 
 from .choices import UserRestrictionType
+from .models import APIResponse
 
 log = logging.getLogger(__name__)
 
@@ -31,19 +32,24 @@ class NetbanClient:
             },
         )
 
+    def _process_response(self, data: Any) -> APIResponse:
+        return APIResponse(**data)
+
     async def _api_request(
         self,
         url: str,
         r_type: RequestType,
         params: dict | None = None,
         json_body: dict | None = None,
-    ) -> Any:
+    ) -> APIResponse:
         async with getattr(self._s, r_type.value)(
             url=url,
             params=params,
             json=json_body,
         ) as response:
-            return await response.json()
+            data = await response.json()
+
+            return self._process_response(data)
 
     @property
     def host_url(self) -> str:
