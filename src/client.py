@@ -61,8 +61,6 @@ class NetbanClient:
         if restriction_length is not None:
             json_body["restriction_length"] = restriction_length
 
-        print(json_body)
-
         async with self._s.post(
             url=url,
             json=json_body,
