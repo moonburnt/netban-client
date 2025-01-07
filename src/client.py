@@ -99,6 +99,12 @@ class NetbanClient:
             json_body=json_body,
         )
 
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, *args):
+        await self._s.close()
+
     def __del__(self):
         try:
             loop = asyncio.get_event_loop()
