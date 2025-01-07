@@ -1,10 +1,10 @@
-import logging
+from aiohttp import ClientSession, ClientTimeout
 
+import asyncio
 from enum import StrEnum
+import logging
 from typing import Any
 from urllib.parse import urljoin as join
-
-from aiohttp import ClientSession, ClientTimeout
 
 from .choices import UserRestrictionType
 from .models import APIResponse
@@ -98,3 +98,13 @@ class NetbanClient:
             r_type=RequestType.POST,
             json_body=json_body,
         )
+
+    def __del__(self):
+        try:
+            loop = asyncio.get_event_loop()
+            if loop.is_running():
+                loop.create_task(self._s.close())
+            else:
+                loop.run_until_complete(self._s.close())
+        except Exception:
+            pass
