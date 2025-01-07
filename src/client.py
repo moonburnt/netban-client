@@ -1,16 +1,21 @@
 import logging
 
+from enum import StrEnum
 from typing import Any
 from urllib.parse import urljoin as join
 
 from aiohttp import ClientSession, ClientTimeout
 
-from .errors import AuthorizationError
 from .choices import UserRestrictionType
 
 log = logging.getLogger(__name__)
 
 API_VERSION: str = "0.1.0"
+
+
+class RequestType(StrEnum):
+    GET = "get"
+    POST = "post"
 
 
 class NetbanClient:
@@ -25,6 +30,20 @@ class NetbanClient:
                 "Netban-Api-Version": API_VERSION,
             },
         )
+
+    async def _api_request(
+        self,
+        url: str,
+        r_type: RequestType,
+        params: dict | None = None,
+        json_body: dict | None = None,
+    ) -> Any:
+        async with getattr(self._s, r_type.value)(
+            url=url,
+            params=params,
+            json=json_body,
+        ) as response:
+            return await response.json()
 
     @property
     def host_url(self) -> str:
@@ -41,13 +60,11 @@ class NetbanClient:
         if group is not None:
             params["group"] = group
 
-        async with self._s.get(
+        return await self._api_request(
             url=url,
+            r_type=RequestType.GET,
             params=params,
-        ) as response:
-            response.raise_for_status()
-            data = await response.json()
-            return data
+        )
 
     async def restrict_user(
         self,
@@ -70,10 +87,8 @@ class NetbanClient:
         if restriction_length is not None:
             json_body["restriction_length"] = restriction_length
 
-        async with self._s.post(
+        return await self._api_request(
             url=url,
-            json=json_body,
-        ) as response:
-            response.raise_for_status()
-            data = await response.json()
-            return data
+            r_type=RequestType.POST,
+            json_body=json_body,
+        )
