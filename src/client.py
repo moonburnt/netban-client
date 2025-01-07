@@ -10,6 +10,8 @@ from .choices import UserRestrictionType
 
 log = logging.getLogger(__name__)
 
+API_VERSION: str = "0.1.0"
+
 
 class NetbanClient:
     def __init__(self, host_url: str, auth_token: str, timeout: int = 30):
@@ -17,7 +19,12 @@ class NetbanClient:
         self._s = ClientSession(
             timeout=ClientTimeout(timeout),
         )
-        self._s.headers.update({"Netban-Api-Key": auth_token})
+        self._s.headers.update(
+            {
+                "Netban-Api-Key": auth_token,
+                "Netban-Api-Version": API_VERSION,
+            },
+        )
 
     @property
     def host_url(self) -> str:
@@ -26,7 +33,7 @@ class NetbanClient:
     async def get_restrictions_for_user(
         self, user: str, group: str | None = None
     ) -> list[dict[str, Any]]:
-        url = join(self.host_url, "api/v1/restrictions")
+        url = join(self.host_url, "api/restrictions")
         params = {
             "user": user,
         }
@@ -45,14 +52,16 @@ class NetbanClient:
     async def restrict_user(
         self,
         user: str,
+        restricted_by: str,
         group: str | None = None,
         restriction_type: UserRestrictionType = UserRestrictionType.BAN,
         restriction_reason: str = "",
         restriction_length: str | None = None,
     ) -> dict[str, Any]:
-        url = join(self.host_url, "api/v1/restrictions/restrict/")
+        url = join(self.host_url, "api/restrictions/restrict/")
         json_body = {
             "user": user,
+            "restricted_by": restricted_by,
             "restriction_type": restriction_type.value,
             "restriction_reason": restriction_reason,
         }
